@@ -53,7 +53,7 @@ Two layers with one strict boundary.
 ## 3. Folder structure
 
 ```
-Sample_Project/
+ifc_web_viewer/
 ├─ docs/                 requirements.md, design.md, test-plan.md
 ├─ samples/              sample IFC files (git-ignored if large)
 ├─ public/               static assets, web-ifc WASM
