@@ -37,3 +37,21 @@ Test model used so far: `Architectural Model_g_gane.ifc` (Revit 2026 export, IFC
 - IFC2x3 and IFC4 sample files still needed (S6).
 - Very large files (near the 200 MB cap) not yet tried. Memory use unknown.
 - Production build not yet run in a browser (S6). The build succeeds, but a bundle over 2 MB is flagged.
+
+## Slice S2 — Model info panel (R5)
+
+| # | Acceptance criterion | Requirement | How verified | Result |
+|---|----------------------|-------------|--------------|--------|
+| S2-1 | After load the panel shows file name, size, IFC schema, project name and element count | R5 | Manual with the sample: `Architectural Model_g_gane.ifc`, 9.7 MB, IFC4X3_ADD2, project `16-048`, 656 elements. Values match the S1 spike | Pass |
+| S2-2 | File size is formatted like Windows Explorer (1024-based, one decimal) | R5 | Unit tests (11 cases including bounds and invalid input) | Pass |
+| S2-3 | Project name uses `Name`, falls back to `LongName`, ignores blank or non-text values | R5 | Unit tests using the real `getItemsData` shape | Pass |
+| S2-4 | A project with no usable name shows "Unnamed project" | R5 | Code path only. Not exercised in the browser (no such model available) | Untested in browser |
+| S2-5 | Opening a second model replaces the panel content and disposes the first model | R1, R5 | Manual: same file reopened under a different name. One canvas, one panel, no console errors | Pass (same model only) |
+| S2-6 | A failed open leaves the previous model and its panel unchanged | R9 | Manual with a bad file after a good one | Pass |
+| S2-7 | Panel readable in the light and dark themes | R4 | Manual screenshots | Pass |
+
+### Known gaps carried forward
+- S2-4 needs a model without a project name. Look for one in S6, when IFC2x3 and IFC4 samples are added.
+- Replacing a model was only tested with the same file, not a different model.
+- The camera is framed before the sidebar appears; it looked correct at 800 px wide, but narrow windows were not tested. **Reset view** re-frames.
+- "Elements (with geometry)" counts items that have 3D geometry. A curtain wall or ramp that only groups other elements is not counted itself.

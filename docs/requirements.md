@@ -1,6 +1,6 @@
-# IFC Web Viewer — Requirements (v1.1)
+# IFC Web Viewer — Requirements (v1.2)
 
-Status: **Approved v1.1** (MVP scope R1–R9 confirmed by owner)
+Status: **Approved v1.1** (MVP scope R1–R9 confirmed by owner), with v1.2 clarification of R5
 
 ## 1. Problem statement
 BIM models are usually opened in heavy desktop software. This project is a browser-based viewer:
@@ -19,7 +19,7 @@ open an IFC file from your computer, look around it, and inspect its elements an
 | R2 | Orbit, pan and zoom the camera | Left-drag rotates, right-drag pans, wheel zooms |
 | R3 | Auto-frame the model | After load, the whole model is visible and centred |
 | R4 | Default lighting and background | Model is clearly visible with no setup; light/dark background toggle |
-| R5 | Model info panel | Shows file name, file size, IFC schema version, project name and element count |
+| R5 | Model info panel | Shows file name, file size, IFC schema version, project name and element count. Element count means elements that have 3D geometry |
 | R6 | Spatial tree | Tree of Project > Site > Building > Storey; clicking a node highlights its elements |
 | R7 | Select an element | Clicking an element highlights it and shows its name, IFC class, GlobalId and property sets |
 | R8 | Visibility controls | Hide/show elements by IFC class (walls, slabs, doors, ...); isolate selection; reset view |
@@ -53,3 +53,4 @@ open an IFC file from your computer, look around it, and inspect its elements an
 - v0.2: format changed to IFC-only; added spatial tree, element selection and properties, visibility controls
 - v1.0: approved; open questions resolved
 - v1.1: R1 now names IFC2x3, IFC4 and IFC4X3 (owner's sample file is IFC4X3_ADD2)
+- v1.2: R5 clarified: element count means elements with 3D geometry (found during S2: some element types, such as curtain walls, carry no geometry themselves)
