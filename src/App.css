@@ -144,3 +144,40 @@ button:disabled {
   padding: 0 8px;
   line-height: 1.4;
 }
+
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  flex: none;
+  width: 280px;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.info-list {
+  margin: 0;
+}
+
+.info-list dt {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.info-list dd {
+  margin: 0 0 10px;
+}
+
+.info-list .wrap {
+  overflow-wrap: anywhere;
+}

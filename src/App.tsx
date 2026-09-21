@@ -4,6 +4,7 @@ import { useViewer } from './hooks/useViewer'
 import { DropZone } from './ui/DropZone'
 import { ErrorBanner } from './ui/ErrorBanner'
 import { LoadingOverlay } from './ui/LoadingOverlay'
+import { ModelInfoPanel } from './ui/ModelInfoPanel'
 import { Toolbar } from './ui/Toolbar'
 
 export default function App() {
@@ -23,16 +24,24 @@ export default function App() {
         onToggleDark={toggleDark}
       />
 
-      <DropZone
-        disabled={state.loading}
-        showPrompt={state.model === null && !state.loading}
-        onFile={loadFile}
-        onChoose={openPicker}
-      >
-        <div className="viewport" ref={containerRef} />
-        {state.loading && <LoadingOverlay stage={state.stage} progress={state.progress} />}
-        {state.error && <ErrorBanner message={state.error} onDismiss={dismissError} />}
-      </DropZone>
+      <div className="workspace">
+        {state.model && (
+          <aside className="sidebar">
+            <ModelInfoPanel model={state.model} />
+          </aside>
+        )}
+
+        <DropZone
+          disabled={state.loading}
+          showPrompt={state.model === null && !state.loading}
+          onFile={loadFile}
+          onChoose={openPicker}
+        >
+          <div className="viewport" ref={containerRef} />
+          {state.loading && <LoadingOverlay stage={state.stage} progress={state.progress} />}
+          {state.error && <ErrorBanner message={state.error} onDismiss={dismissError} />}
+        </DropZone>
+      </div>
 
       <input
         ref={inputRef}

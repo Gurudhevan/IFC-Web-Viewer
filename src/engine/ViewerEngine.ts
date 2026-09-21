@@ -2,12 +2,20 @@ import { FragmentsModels, type FragmentsModel } from '@thatopen/fragments'
 import fragmentsWorkerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { extractProjectName } from '../domain/modelInfo'
 import { HEADER_BYTES, validateIfcFile } from '../domain/validateIfcFile'
 import type { ConvertMessage, ConvertRequest } from './convert.worker'
 
 export type LoadStage = 'reading' | 'converting' | 'loading'
 
-export interface LoadedModelInfo {
+/** What the engine reads from the model itself once it is loaded. */
+interface ModelSummary {
+  projectName: string | null
+  /** Number of elements that have 3D geometry. */
+  elementCount: number
+}
+
+export interface LoadedModelInfo extends ModelSummary {
   fileName: string
   sizeBytes: number
   schema: string
@@ -128,10 +136,15 @@ export class ViewerEngine {
       if (this.disposed) return
 
       this.emit('progress', { stage: 'loading', value: 0 })
-      await this.showModel(fragmentBytes)
-      if (this.disposed) return
+      const summary = await this.showModel(fragmentBytes)
+      if (this.disposed || !summary) return
 
-      this.emit('modelLoaded', { fileName: file.name, sizeBytes: file.size, schema: check.schema })
+      this.emit('modelLoaded', {
+        fileName: file.name,
+        sizeBytes: file.size,
+        schema: check.schema,
+        ...summary,
+      })
     } catch (error) {
       if (this.disposed) return
       // Library errors are not meant for users; keep the detail in the console for debugging.
@@ -213,7 +226,8 @@ export class ViewerEngine {
     })
   }
 
-  private async showModel(fragmentBytes: Uint8Array): Promise<void> {
+  /** Returns null when the engine was disposed while the model was loading. */
+  private async showModel(fragmentBytes: Uint8Array): Promise<ModelSummary | null> {
     if (!this.fragments) this.fragments = new FragmentsModels(fragmentsWorkerUrl)
     const fragments = this.fragments
 
@@ -225,11 +239,27 @@ export class ViewerEngine {
     }
 
     const model = await fragments.load(fragmentBytes, { modelId: `model-${++this.modelCounter}` })
-    if (this.disposed) return
+    if (this.disposed) return null
     model.useCamera(this.camera)
     this.scene.add(model.object)
     this.model = model
     await fragments.update(true)
     this.resetView()
+    return this.readSummary(model)
+  }
+
+  private async readSummary(model: FragmentsModel): Promise<ModelSummary> {
+    const [geometryIds, projects] = await Promise.all([
+      model.getItemsIdsWithGeometry(),
+      model.getItemsOfCategories([/^IFCPROJECT$/]),
+    ])
+
+    let projectName: string | null = null
+    const projectId = projects['IFCPROJECT']?.[0]
+    if (projectId !== undefined) {
+      const [data] = await model.getItemsData([projectId], { attributesDefault: true })
+      projectName = extractProjectName(data)
+    }
+    return { projectName, elementCount: geometryIds.length }
   }
 }
