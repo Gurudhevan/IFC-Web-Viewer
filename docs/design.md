@@ -1,6 +1,6 @@
-# IFC Web Viewer — Design (v1.1)
+# IFC Web Viewer — Design (v1.2)
 
-Status: **Approved v1.1**
+Status: **Approved v1.1**, with v1.2 amendments from S1 findings (see change log)
 Implements: `docs/requirements.md` v1.1
 
 ## 1. Technology decisions
@@ -12,7 +12,7 @@ Implements: `docs/requirements.md` v1.1
 | Build / dev server | Vite | Fast, standard, first-class WASM/worker support |
 | 3D rendering | Three.js 0.186 (plain, no React Three Fiber), OrbitControls from `three/addons` | IFC libraries are imperative and work directly with Three.js |
 | IFC conversion + display | `@thatopen/fragments` 3.4.7 (`IfcImporter`, `FragmentsModels`) on `web-ifc` 0.0.77 | Actively maintained; provides load, raycast, highlight, visibility, properties and spatial structure in a worker. `web-ifc-three` (last updated Jan 2024) is rejected. `@thatopen/components` is deferred: it adds a wrapper layer and dependencies we do not need for the MVP, and can be added later |
-| Self-hosting | Fragments worker and `web-ifc` WASM served from our own `public/` | No runtime dependency on a CDN |
+| Self-hosting | Fragments worker via a Vite `?url` import of `@thatopen/fragments/worker`; `web-ifc.wasm` copied to `public/wasm/` by `scripts/copy-wasm.mjs` on `npm install` | No runtime dependency on a CDN |
 | Unit tests | Vitest | Same config as Vite |
 | Hosting | Static site | No backend needed (R-NFR privacy) |
 
@@ -55,8 +55,10 @@ Two layers with one strict boundary.
 ```
 ifc_web_viewer/
 ├─ docs/                 requirements.md, design.md, test-plan.md
-├─ samples/              sample IFC files (git-ignored if large)
-├─ public/               static assets, web-ifc WASM
+├─ samples/              sample IFC files (git-ignored)
+├─ scripts/              copy-wasm.mjs (runs on npm install)
+├─ .github/workflows/    ci.yml (lint, build, test)
+├─ public/               static assets; public/wasm/ is generated, git-ignored
 ├─ src/
 │  ├─ main.tsx  App.tsx
 │  ├─ engine/            ViewerEngine.ts, selection.ts, visibility.ts
@@ -72,7 +74,7 @@ ifc_web_viewer/
 
 1. User drops a file. `validateIfcFile` (domain) checks extension, size limit and the `ISO-10303-21` header. Failure goes to the ErrorBanner (R9).
 2. The file is read as an `ArrayBuffer` and handed to `engine.loadFile`.
-3. `IfcImporter.process()` converts the IFC bytes to Fragments binary and reports progress (R1). `FragmentsModels.load()` then loads that binary into a worker-backed model.
+3. Our own conversion Web Worker (`engine/convert.worker.ts`) runs `IfcImporter.process()` to turn the IFC bytes into Fragments binary and reports progress (R1). It runs in our worker because `IfcImporter` otherwise works on the calling thread and would freeze the page. `FragmentsModels.load()` then loads that binary into its own worker-backed model.
 4. The model object is added to the Three.js scene, the camera is framed with `getMergedBox()` (R3), and the model is wired to the camera update loop so culling and level of detail work. `modelLoaded` fires with `{ name, sizeBytes, schema, projectName, elementCount }` (R5).
 5. The engine calls `getSpatialStructure()` and hands the raw result to `buildSpatialTree` (domain), which returns the tree for the UI (R6).
 6. A click calls `raycast()` to find an element. The engine highlights it and emits `selectionChanged` with the element's local ID. Properties come from `getItemsData()` on demand, are formatted by `formatProperties`, and are shown (R7).
@@ -118,9 +120,22 @@ Each slice runs the full mini-cycle: acceptance criteria, code, tests, review, c
 | React re-render or double-mount duplicates the scene | Boundary rule and `dispose()` (section 2) |
 | Property lookups slow on big models | Fetch properties only for the selected element |
 
+## 7a. S1 spike findings (measured on the owner's IFC4X3_ADD2 sample)
+
+| Question | Finding | Consequence |
+|----------|---------|-------------|
+| Is IFC4X3_ADD2 supported? | Yes. Converted in 0.7 s in Node, 10.15 MB to 0.51 MB of Fragments | Schema risk retired for IFC4X3 |
+| Does `IfcImporter` drop element classes? | No for this model: 656 geometry items across members, plates, walls, railings, spaces, doors, windows, slabs and others. Classes it skips are non-physical (styles, addresses) | Keep the default class list; re-check with other models |
+| Curtain walls, ramps, roofs report few or no geometry items of their own | Their child members and flights carry the geometry (normal for Revit exports) | Tree and hide-by-class (S4, S5) must not assume every class has geometry |
+| Spatial structure shape | Nodes alternate: a category node `{ category, localId: null }` whose children are instance nodes `{ category: null, localId }` | `buildSpatialTree` (S4) must normalise this into one node type. Use this real shape as its test fixture |
+| `IfcImporter.process()` with no `progressCallback` | Never resolves | The engine always passes a callback |
+| Which model type has `getMergedBox`? | The worker-backed `FragmentsModel` only. `SingleThreadedFragmentsModel` lacks it | Browser code uses `model.box` |
+| Coordinates | IFC Z-up is displayed Y-up by Fragments | No axis conversion needed in our code |
+
 ## 8. Out of scope for design
 Deployment target and CI provider are decided in S6.
 
 ## 9. Change log
 - v0.1: initial design
 - v1.1: approved. Use `@thatopen/fragments` directly instead of `@thatopen/components`; self-host worker and WASM; schema support widened to IFC2x3, IFC4, IFC4X3
+- v1.2: S1 learnings: own conversion worker, concrete self-hosting method, spike findings (section 7a)
