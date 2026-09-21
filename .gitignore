@@ -26,3 +26,5 @@ dist-ssr
 # Project-specific
 # Sample IFC models can be large and are private; keep them out of git
 samples/*.ifc
+public/wasm/
+.claude/

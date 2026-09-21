@@ -1,0 +1,146 @@
+.app {
+  --bg: #f1f3f6;
+  --panel: #ffffff;
+  --text: #1c1f24;
+  --muted: #5d6673;
+  --border: #d5dae1;
+  --accent: #2563eb;
+  --danger-bg: #fdecec;
+  --danger-text: #8a1c1c;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app.dark {
+  --bg: #1b1d21;
+  --panel: #262a30;
+  --text: #e8eaed;
+  --muted: #a0a8b3;
+  --border: #3a4049;
+  --accent: #6ea0ff;
+  --danger-bg: #4a2323;
+  --danger-text: #ffd0d0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar .file-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropzone {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+}
+
+.viewport canvas {
+  display: block;
+}
+
+.prompt,
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 24px 32px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.prompt h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.prompt p,
+.loading p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.loading progress {
+  width: 220px;
+}
+
+.drag-overlay {
+  position: absolute;
+  inset: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  border: 3px dashed var(--accent);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.error-banner {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(640px, 90%);
+  padding: 10px 14px;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-text);
+  border-radius: 8px;
+}
+
+.error-banner button {
+  padding: 0 8px;
+  line-height: 1.4;
+}
